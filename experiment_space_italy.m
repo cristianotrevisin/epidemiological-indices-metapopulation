@@ -1,10 +1,13 @@
 clear all
 close all
 clc
-% Load incidence
+
+%% LOAD DATA
+% 1. Load incidence
 cases = readtable("data/cases_region.csv",'ReadVariableNames',true); 
 Time = cases.data';
 
+% 2. Treat incidence data
 count_temp = table2array(cases(:,2:end)); count_temp(isnan(count_temp))=0;
 % Reorganise Trentino Alto Adige
 count = zeros(size(count_temp,1),20);
@@ -18,81 +21,51 @@ cases_region(cases_region<0)=0;
 Fp = smoothdata(cases_region, 2, 'movmean', [13 0]); Fp(Fp<0)=0;
 Ft = sum(Fp,1);
 
-% Load Mobility and Population
+% 3. Load Mobility and Population
 load data/mobility P
 population = readtable("data/population_regions.csv");
-
 ResPop = table2array(population(:,2));
 
+% Make matrices
 C = full(P); clear P;
 x=(1-diag(C)); % percentage of moving pop
 Q=(C-diag(diag(C)))*diag(1./x); % extradiagonal fluxes
-% % Load Google Mobility Data
+
+
+% 4. Load Google Mobility Data
 load data/google-data.mat
 a = find(Time_GMD == Time(1)); b = find(Time_GMD == Time(end));
 GMD = GMD(:,a:b);
 gmd_fill = fillmissing(GMD,'linear',2);
 gmd_fill_smooth = smoothdata(gmd_fill, 2, 'movmean', 14);
 
+% 5. Make exposure matrix
 csi = x.*gmd_fill_smooth;
-% Compute matrix Z
 Z = compute_matrix_Z(ResPop,Q,csi);
 
-%%
-figure;
-plot(Time,Fp','color',[0 0 0 0.4])
-
-
-%%
-
-% Compute max f
-% Build generation time distribution
+%% Define parameters
+% Max age of infection
 q = 21; 
-
-fmax = zeros(1,1);
-
-
+% Build generation time distribution
 mean_GD = 5.2;
 std_GD = 1.72;
-
-p = @(x) exp(-0.068*x);
-p_x = p(0:q-1);                           % survival probability    
-sigma = exp(-0.068);               % fraction of reaching next dayphi = zeros(5,21);
-
 a_beta = (mean_GD/std_GD)^2;
 b_beta = mean_GD/a_beta;
 beta = @(x) gampdf(x,a_beta,b_beta);
-
 beta_x = beta(1:q)/sum(beta(1:q));      % generation times
-
+% Survival function (on infectious compartment)
+p = @(x) exp(-0.068*x);
+p_x = p(0:q-1);       % survival probability    
+sigma = exp(-0.068);  % fraction of reaching next dayphi = zeros(5,21);
+% Ratio
 phi = beta_x./p_x;
 
-
+%% Compute convolution
 alpha = compute_alpha(Fp,beta_x);
-
 alpha_sumS = squeeze(sum(alpha,1))';
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PARAMETERS
-% par.delay = 0; 
-% par.init = 10; 
-% par.Np = 20000;
-% par.cv_r_0 = 1;
-% par.low_cv_r=0.25;
-% par.alpha_min = 0;
-% par.delta = 0.95;
-% par.lik = 'V1';
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% RUN
-%%
-% %1. No space no variant
-% R1 = pf(Ft,par,1,1,zeros(1,lim),alpha_sumS);
-% [L1,K1] = compute_leslie_matrix(phi, p_x, R1.Q50, ones(1,1,lim),1);
-% [E1,RG1] = compute_epidemicity(L1,K1);
-
-
-%%
-
+%% Compute effective reproduction numbers
+% Parameters
 par.delay = 0; 
 par.init = 10; 
 par.Np = 20000;
@@ -102,14 +75,13 @@ par.alpha_min = 0;
 par.delta = 0.95;
 par.lik = 'V1';
 
-
-%2.  Space but no variant
+% Simulate
 [R2,di,mo] = pf(Fp,par,Q,ResPop,csi,squeeze(alpha));
-figure;plot(R2.Q50')
-%%
+
+% Compute Leslie Projection matrix
 [L2,K2] = compute_leslie_matrix(phi, p_x, R2.Q50, Z, 1);
 
-%% DEFINE MATRIX X (OUTPUT);
+% Compute transformation matrices;
 X1 = zeros(20,20*21);
 X2 = zeros(20,20*21);
 
@@ -120,16 +92,15 @@ for i = 1:20
     end
 end
 
+% Compute epidemicity and global effective RN
 ES = compute_epidemic_subset(L2,20,21,X1,X2);
 ES2 = compute_epidemic_subset(L2,20,21,X2,X2);
 E2 = compute_epidemicity(L2,X1,X2);
 E3 = compute_epidemicity(L2,X2,X2);
 [RG2] = compute_global_RN(K2);
 
-%% computation max amplification 
-
+% Compute amplification envelope
 Amax = zeros(3,size(L2,3));
-
 for t = 1:size(L2,3)
     temp1 = zeros(1,50);
     temp2 = zeros(1,50);
@@ -147,27 +118,17 @@ for t = 1:size(L2,3)
     Amax(3,t) = max(temp3,[],'omitmissing');
 end
 Amax_save = Amax;
-%%
 Amax(:,RG2>1)=NaN;
-figure();
-subplot(3,1,1)
-
-hold on
-plot(Time,E2.E1)
-subplot(3,1,2)
-plot(Time,Amax(2,:))
-hold on
-plot(Time,E2.E2)
-subplot(3,1,3)
-plot(Time,RG2)
 
 
 %% PLOTS BELOW
+% Render it nicely on Matlab (vectorial)
 set(0, 'defaultFigureRenderer', 'painters')
 set(groot, 'defaultFigureRenderer', 'painters')
 
 %% RGDRAW
 
+% When the global RN is >1, the amplification envelope has no upper bound
 RGdraw = RG2-1;
 TRANS = find(diff(sign(RGdraw)));
 first_non_nan = find(RGdraw>0,1,'first');
@@ -187,7 +148,6 @@ Xpatch = [X1patch; X2patch; X2patch; X1patch];
 
 
 %% SPACE
-%province_list = ["VR", "VI", "BL", "TV", "VE", "PD", "RO"];
 regions = ["Piedmont",...
     "Aosta Valley",...
     "Lombardy",...
@@ -295,13 +255,13 @@ subindex = @(A, r, c) A(r, c);     % An anonymous function for 2-D indexing
 
 %compute rho
 rho = zeros(20,600);
-for i = 1:size(Z,3);
+for i = 1:size(Z,3)
     Zt = squeeze(Z(:,:,i));
     temp = Zt./repmat(ResPop,1,20);
     rho(:,i) = sum(temp,1)'.*ResPop;
 end
 
-for i = 1:20;
+for i = 1:20
     CORR_COEFS_E2(i)=subindex(corrcoef(R2.Q50(i,~isnan(R(i,:)))',E2.E2(~isnan(E2.E2))'),1,2);
     CORR_COEFS_E1(i)=subindex(corrcoef(R2.Q50(i,~isnan(R(i,:)))',E2.E1(~isnan(E2.E1))'),1,2);
     CORR_COEFS_RG(i)=subindex(corrcoef(R2.Q50(i,~isnan(R(i,:)))',RG2(~isnan(RG2))'),1,2);
@@ -388,8 +348,8 @@ for rk = 1:length(DIFF)
         fields(rk) = regions(IDX(rk));
 end
 
-%%
-fig=figure
+
+fig=figure;
 tiledlayout(1,3)
 
 nexttile

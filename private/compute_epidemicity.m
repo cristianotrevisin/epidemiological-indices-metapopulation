@@ -39,13 +39,6 @@ function E = compute_epidemicity(L,X1, X2)
         E.E2(t) = max(temp2);
         E.EI(t) = max(temp3);
 
-        
-
-        
-        % temp = sum(abs(Lt),'omitmissing');
-       
-        % E.E1(t) = max(temp);
-        % E.E2(t) = max(svd(Lt));
     end
 
 end

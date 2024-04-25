@@ -1,7 +1,5 @@
 function alpha = compute_alpha(data,beta_x)
 
-    
-
     if ndims(data)==2
        if size(data,1)==1 %there is just one node
             data = reshape(data,[1 size(data,1) size(data,2)]);

@@ -5,11 +5,6 @@ clc
 xis = [0.001; 0.002; 0.005; 0.01; 0.02; 0.05; 0.1; 0.2; 0.5];
 
 
-
-load data/synthetic_rt.mat
-% Rv =
-
-
 mean_GD = 5.20; 
 std_GD = 1.72; 
 k = 21; 
@@ -256,16 +251,9 @@ ylabel('MAPE')
 xlabel('N')
 set(gca,'YAxisLocation','right')
 
-%%
-figure;
-scatter(E2con(:),RGcon(:))
-%%
+
 function P = zipf(rank, expn, minP)
-%     ranks = 1:1:N;
-%     pmf = (ranks.^(-expn))/sum(ranks.^(-expn));
-%     samples = rand(1,M);
-%     p = cumsum(pmf(:));
-%     [~,x] = histc(samples,[0;p/p(end)])
+
 
     H = sum(1./(rank.^expn));
     

@@ -28,8 +28,7 @@ b_beta = mean_GD/a_beta;
 beta = @(x) gampdf(x,a_beta,b_beta);
 
 
-set(0, 'defaultFigureRenderer', 'painters')
-set(groot, 'defaultFigureRenderer', 'painters')
+
 % Define daily vaues
 beta_x = beta(1:k)/sum(beta(1:k));      % generation times
 p_x = p(0:k-1);                           % survival probability
@@ -71,9 +70,9 @@ for n1 = 1:length(N1)
                 Z = P'*C;
         
                 F = zeros(k*N,k*N);
-            % INDs = sub2ind(size(F),N+1:k*N,1:(k-1)*N);
+            
             T = zeros(k*N,k*N);
-            % T(INDs) = sx; 
+            
         
             for ii = 1:k
                 F(1:N,1+N*(ii-1):N*ii) = sigma0*phi(ii)*repmat(R',N,1).*Z;
@@ -99,8 +98,7 @@ for n1 = 1:length(N1)
          
         RG(i1,i2,n1,n2) = X;
         E2(i1,i2,n1,n2) = Y;
-                % RG(i1,i2) = 0.5*(R1*Z(1,1) + R2*Z(2,2) +...
-                %     sqrt((R1*Z(1,1)-R2*Z(2,2))^2 + 4*R1*R2*Z(1,2)*Z(2,1)));
+
             end
         
         end
@@ -143,21 +141,6 @@ for n1 = 1:length(N1)
         end
     end
 end
-% 
-% figure
-% for n1 = 1:length(N1)
-%     for n2 = 1:length(N2)
-%         subplot(length(N1),length(N2),3*(n1-1)+n2)
-%         RGv = squeeze(E2(:,:,n1,n2));
-%         contourf(XX,YY,RGv,'LevelList',1:0.1:2)
-%         colorbar
-%         clim([min(E2,[],'all') max(E2,[],'all')])
-%         xlabel('\xi_1')
-%         ylabel('\xi_2')
-%     end
-% end
-
-%%
 
 %%
 R1 = 0:0.01:1.25; R2 = 0:0.01:1.25;

@@ -3,9 +3,9 @@ close all
 clc
 
 % READ MATRIX FOR ITALY
-opts=detectImportOptions('pendo_2011/matrix_pendo2011_10112014.txt');
+opts=detectImportOptions('MATRICE PENDOLARISMO 2011/matrix_pendo2011_10112014.txt');
 opts.SelectedVariableNames=[1 3 8 15];
-t=readtable('pendo_2011/matrix_pendo2011_10112014.txt',opts);
+t=readtable('MATRICE PENDOLARISMO 2011/matrix_pendo2011_10112014.txt',opts);
 
 tbr=(cell2mat(t{:,1})=='L' | t{:,3}==0);
 t(tbr,:)=[];
@@ -31,9 +31,6 @@ end
 
 P=bsxfun(@rdivide,OI,sum(OI,1));
     
-
-% COMPUTE MATRIX FOR VENETO
-
 % for plotting
 regions = ["Piemonte",...
     "Valle d'Aosta",...
