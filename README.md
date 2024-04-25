@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/756931849.svg)](https://zenodo.org/doi/10.5281/zenodo.11067889)
+
 # Epidemicity indices and reproduction numbers from infectious disease data in connected human populations
 
 This repository contains code and data described in
