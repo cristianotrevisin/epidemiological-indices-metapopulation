@@ -9,9 +9,9 @@ Epidemicity indices and reproduction numbers from infectious disease data in con
 
 - The top-level directory contains MATLAB® scripts for running all the analyses described in the above paper and generating the relevant figures:
 
-	- `run_synthetic1.m` (generates Figures 1 and 2 of the above paper)
-  - `run_synthetic2.m` (generates Figure 3 of the above paper)
-	- `run_italy.m` (generates Figures 4-6 of the above paper)
+	- `experiment_synthetic1.m` (generates Figures 1 and 2 of the above paper)
+	- `experiment_synthetic2.m` (generates Figure 3 of the above paper)
+	- `experiment_italy.m` (generates Figures 4-6 of the above paper)
 
   Please refer to the comments inside the scripts for more information.
 
