@@ -2,48 +2,24 @@ clear all
 close all
 clc
 
-xis = [0.001; 0.002; 0.005; 0.01; 0.02; 0.05; 0.1; 0.2; 0.5];
-stds = [0.001; 0.01; 0.1; 1];
-T = 50;
-
-set(0, 'defaultFigureRenderer', 'painters')
-set(groot, 'defaultFigureRenderer', 'painters')
-
-par.mean_GD = 5.20; 
-par.std_GD = 1.72; 
-par.k = 21; 
-
-
-
-
-
-sigma0 = 1;
+% Build generation time distribution
 mean_GD = 5.2; 
 std_GD = 1.7; 
 k = 21; 
-p = @(x) exp(-0.068*x);
-
 a_beta = (mean_GD/std_GD)^2;
 b_beta = mean_GD/a_beta;
 beta = @(x) gampdf(x,a_beta,b_beta);
-
-
-
-% Define daily vaues
 beta_x = beta(1:k)/sum(beta(1:k));      % generation times
+% Survival function
+p = @(x) exp(-0.068*x);
 p_x = p(0:k-1);                           % survival probability
-
 sigma = p(2:k)./p(1:k-1);               % fraction of reaching next day
 phi = beta_x./p_x;
 sx = p(1);
+sigma0 = 1;
 
+%% EXPERIMENT TO GENERATE FIG. 1 OF THE PAPER
 
-%%
-N_metapopulations = 50;
-
-Rmin = zeros(N_metapopulations,length(xis),length(stds),T);
-Rmax = zeros(N_metapopulations,length(xis),length(stds),T);
-Rglo = zeros(N_metapopulations,length(xis),length(stds),T);
 R = [.5;1.5];
 N=2;
 xi1 = 0:0.01:1;
@@ -57,33 +33,33 @@ for n1 = 1:length(N1)
     for n2 = 1:length(N2)
         for i1 = 1:length(xi1)
             for i2 = 1:length(xi2)
-                
+
                 C(1,1) = 1-xi1(i1);
                 C(2,1) = xi1(i1);
-        
+
                 C(1,2) = xi2(i2);
                 C(2,2) = 1-xi2(i2);
-        
+
                 RP = [N1(n1);N2(n2)];
                 AP = C*RP;
                 P = C.*RP'./AP;
                 Z = P'*C;
-        
+
                 F = zeros(k*N,k*N);
-            
-            T = zeros(k*N,k*N);
-            
-        
-            for ii = 1:k
-                F(1:N,1+N*(ii-1):N*ii) = sigma0*phi(ii)*repmat(R',N,1).*Z;
-                if ii < k
-                    T(sub2ind(size(F),1+N*ii:N*(ii+1),1+N*(ii-1):N*ii))=sigma(ii);
+
+                T = zeros(k*N,k*N);
+
+
+                for ii = 1:k
+                    F(1:N,1+N*(ii-1):N*ii) = sigma0*phi(ii)*repmat(R',N,1).*Z;
+                    if ii < k
+                        T(sub2ind(size(F),1+N*ii:N*(ii+1),1+N*(ii-1):N*ii))=sigma(ii);
+                    end
                 end
-            end
-        
+
             L = F+T;
             NGM = F*inv(eye(k*N)-T);
-        
+
             try 
                 X = eigs(NGM,1,'largestreal'); 
             catch 
@@ -95,17 +71,18 @@ for n1 = 1:length(N1)
             catch
                 Y = NaN;
             end
-         
+
         RG(i1,i2,n1,n2) = X;
         E2(i1,i2,n1,n2) = Y;
 
             end
-        
+
         end
     end
 end
-%%
-
+%% GENERATE THE FIGURE
+set(0, 'defaultFigureRenderer', 'painters')
+set(groot, 'defaultFigureRenderer', 'painters')
 red = [0.8588235294117647 0.16862745098039217 0.2235294117647059];
 white = [1 1 1];
 blue = [0.1607843137254902 0.2 0.3607843137254902];
@@ -142,7 +119,8 @@ for n1 = 1:length(N1)
     end
 end
 
-%%
+%% EXPERIMENT TO GENERATE FIGURE 2 OF THE PAPER
+
 R1 = 0:0.01:1.25; R2 = 0:0.01:1.25;
 
 C = [.75 .25; .25 .75]; RP1 = [1e5; 1e5]; RP2 = [1e5; 5e5]; RP3 = [1e5; 10e5]; RP4 = [1e5; 50e5];
@@ -202,57 +180,7 @@ for r1 = 1:length(R1);
     end
 end
 
-%%
-
-erre = 0.25;
-R = [erre; erre];
-C = [.75 .25; .25 .75]; RP = [10e5; 10e5]; 
-AP = C*RP; 
-P = C.*RP'./AP; 
-Z = P'*C; 
-
-L = compute_leslie_matrix(phi,p,R,Z,1);
-X1 = zeros(2,2*21);
-X2 = zeros(2,2*21);
-
-for i = 1:2
-    for j = 1:21
-        X1(i,i+2*(j-1)) = 1;
-        X2(i,i+2*(j-1)) = 1/RP(i);
-    end
-end
-
-for i = 1:size(L,1);
-            I = zeros(size(L,1),1);
-            I(i) = 1;
-            Y_old = X1*I;
-            Y_new = X1*L*I;
-            temp1(i) = norm(Y_new,1)/norm(Y_old,1);
-
-            Y_old = X2*I;
-            Y_new = X2*L*I;
-            temp2(i) = norm(Y_new,2)/norm(Y_old,2);
-
-
-end
-
-
-I = zeros(size(L,1),1);
-I(9) = 100;
-Y_old_1 = X1*I;
-Y_new_1 = X1*(L^1)*I;
-
-norm(Y_new_1,1)/norm(Y_old_1,1)
-
-Y_old_2 = X2*I;
-Y_new_2 = X2*(L^1)*I;
-
-norm(Y_new_2,2)/norm(Y_old_2,2)
-
-E = compute_epidemicity(L,X1,X1)
-
-
-%%
+%% GENERATE THE FIGURE
 [XX,YY] = meshgrid(R1,R2);
 figure;
 tiledlayout(2,2)
