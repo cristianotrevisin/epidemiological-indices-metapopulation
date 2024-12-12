@@ -56,7 +56,7 @@ beta_x = beta(1:q)/sum(beta(1:q));      % generation times
 % Survival function (on infectious compartment)
 p = @(x) exp(-0.068*x);
 p_x = p(0:q-1);       % survival probability    
-sigma = exp(-0.068);  % fraction of reaching next dayphi = zeros(5,21);
+sigma = exp(-0.068);  % fraction of reaching next day
 % Ratio
 phi = beta_x./p_x;
 
