@@ -1,5 +1,5 @@
-[![DOI](https://zenodo.org/badge/756931849.svg)](https://zenodo.org/doi/10.5281/zenodo.11067889)
-[![DOI](https://zenodo.org/badge/756931849.svg)](https://zenodo.org/doi/10.5281/zenodo.15011335)
+[![DOI](https://zenodo.org/badge/756931849.svg)](https://zenodo.org/doi/10.5281/zenodo.15011376)
+
 
 # Epidemicity indices and reproduction numbers from infectious disease data in connected human populations
 
